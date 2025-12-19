@@ -9,7 +9,7 @@
     ```bash
     curl -LsSf https://astral.sh/uv/install.sh | sh
     ```
-3 必要なソフトウェアのインストール
+3. 必要なソフトウェアのインストール
     ```bash
     sudo apt install -y libffi-dev
     sudo apt install -y libsqlite3-dev

@@ -2,8 +2,8 @@
 環境をWSL2上に構築します.
 1. このリポジトリをクローン
     ```bash
-    git clone <repository_url>
-    cd <repository_directory>
+    git clone https://github.com/tkhs-dev/semi-flower.git
+    cd semi-flower
     ```
 2. uvのインストール
     ```bash

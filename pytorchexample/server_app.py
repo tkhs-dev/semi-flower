@@ -1,4 +1,6 @@
 """pytorchexample: A Flower / PyTorch app."""
+import logging
+import os
 
 import torch
 from flwr.app import ArrayRecord, ConfigRecord, Context, MetricRecord
@@ -15,6 +17,15 @@ app = ServerApp()
 @app.main()
 def main(grid: Grid, context: Context) -> None:
     """Main entry point for the ServerApp."""
+
+    path = f"results/{context.run_id}"
+    os.makedirs(path, exist_ok=True)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        filename=f"results/{context.run_id}/server.log",
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
 
     # Read run config
     num_rounds: int = context.run_config["num-server-rounds"]
@@ -37,9 +48,9 @@ def main(grid: Grid, context: Context) -> None:
     )
 
     # Save final model to disk
-    print("\nSaving final model to disk...")
+    logging.info("\nSaving final model to disk...")
     state_dict = result.arrays.to_torch_state_dict()
-    torch.save(state_dict, "sample.pt")
+    torch.save(state_dict, f"results/{context.run_id}/result.pt")
 
 
 def global_evaluate(server_round: int, arrays: ArrayRecord) -> MetricRecord:

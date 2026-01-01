@@ -30,7 +30,7 @@ fraction-evaluate = 1.0
 local-epochs = 5
 learning-rate = 0.01
 batch-size = 64
-malicious-nodes = 0 # 悪意のあるクライアントの数
+malicious-nodes = 4 # 悪意のあるクライアントの数
 
 [tool.flwr.federations]
 default = "local-simulation-gpu"

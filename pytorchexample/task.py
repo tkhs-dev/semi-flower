@@ -8,6 +8,7 @@ from flwr_datasets import FederatedDataset
 from flwr_datasets.partitioner import IidPartitioner
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize, ToTensor
+from torch.utils.data import Dataset
 
 
 class Net(nn.Module):
@@ -51,7 +52,7 @@ def collate_fn(batch):
     return {"img": torch.stack(imgs), "label": labels}
 
 
-def load_data(partition_id: int, num_partitions: int, batch_size: int, class_filter=None):
+def load_data(partition_id: int, num_partitions: int, batch_size: int, class_filter=None, is_malicious=False):
     """Load partition FEMNIST data.
 
     Parameters:
@@ -91,6 +92,9 @@ def load_data(partition_id: int, num_partitions: int, batch_size: int, class_fil
     )
     # print size of train and test sets
     testloader = DataLoader(partition_train_test["test"], batch_size=batch_size, collate_fn=collate_fn)
+
+    if is_malicious:
+        trainloader = make_malicious_trainloader(trainloader, num_classes=62, shift=1)
     return trainloader, testloader
 
 
@@ -142,3 +146,37 @@ def test(net, testloader, device):
     accuracy = correct / len(testloader.dataset)
     loss = loss / len(testloader)
     return loss, accuracy
+
+class ShiftLabelDataset(Dataset):
+    def __init__(self, base_dataset, num_classes, shift=1):
+        self.base_dataset = base_dataset
+        self.num_classes = num_classes
+        self.shift = shift
+
+    def __len__(self):
+        return len(self.base_dataset)
+
+    def __getitem__(self, idx):
+        example = self.base_dataset[idx]
+
+        # HuggingFace Dataset は dict を返す
+        new_example = dict(example)
+        new_example["character"] = (
+                                           example["character"] + self.shift
+                                   ) % self.num_classes
+
+        return new_example
+
+def make_malicious_trainloader(trainloader, num_classes=62, shift=1):
+    return DataLoader(
+        ShiftLabelDataset(
+            trainloader.dataset,
+            num_classes=num_classes,
+            shift=shift,
+        ),
+        batch_size=trainloader.batch_size,
+        shuffle=True,
+        num_workers=trainloader.num_workers,
+        collate_fn=trainloader.collate_fn,  # ★重要
+        pin_memory=True,
+    )
